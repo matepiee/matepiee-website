@@ -28,7 +28,17 @@ export const loginUser = async (credentials) => {
     body: JSON.stringify(credentials),
   });
 
-  const data = await response.json();
+  const contentType = response.headers.get("content-type");
+  let data;
+
+  if (contentType && contentType.indexOf("application/json") !== -1) {
+    data = await response.json();
+  } else {
+    const text = await response.text();
+    throw new Error(
+      response.status === 404 ? "Server endpoint not found (404)" : text,
+    );
+  }
 
   if (!response.ok) {
     throw new Error(data.message || "Error while logging in.");
@@ -51,4 +61,21 @@ export const logoutUser = async () => {
   }
 
   return true;
+};
+
+export const checkAuth = async () => {
+  const response = await fetch(`${API_URL}/me`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = await response.json();
+  return data;
 };

@@ -3,6 +3,7 @@ import argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import pool from "../config/database.js";
 import { validateRegister, validateLogin } from "../middlewares/validations.js";
+import { authenticateToken } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -182,6 +183,15 @@ router.post("/logout", async (req, res) => {
   });
 
   res.status(200).json({ message: "Logged out successfully." });
+});
+
+router.get("/me", authenticateToken, (req, res) => {
+  res.status(200).json({
+    user: {
+      username: req.user.username,
+      id: req.user.id,
+    },
+  });
 });
 
 export default router;
