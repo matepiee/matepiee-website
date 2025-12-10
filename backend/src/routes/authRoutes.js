@@ -7,17 +7,21 @@ import { validateRegister } from "../middlewares/validations.js";
 const router = express.Router();
 
 router.post("/register", async (req, res) => {
+  console.log("Kérés beérkezett.", req.body);
   try {
     const body = req.body;
 
     validateRegister(body);
 
+    const email = body.email || body.email_address;
+
     const hashedPassword = await argon2.hash(body.password);
 
     const [result] = await pool.query(
       `INSERT INTO users (username, password, email_address) VALUES (?, ?, ?)`,
-      [body.username, hashedPassword, body.email_address],
+      [body.username, hashedPassword, email],
     );
+    console.log("Az adatbázis lekérdezés megtörtént.");
 
     if (result.affectedRows === 0) {
       throw new Error("Failed to register user.");

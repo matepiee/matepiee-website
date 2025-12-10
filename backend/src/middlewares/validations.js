@@ -1,14 +1,29 @@
 export const validateRegister = (body) => {
-  if (!body || Object.keys(body).length !== 3) {
+  const { username, password, email, email_address } = body;
+
+  const finalEmail = email || email_address;
+
+  if (!body) {
     throw new Error("Invalid body.");
   }
-  if (!body.username || typeof body.username !== "string") {
+
+  if (!username || typeof username !== "string") {
     throw new Error("Invalid username.");
   }
-  if (!body.password || typeof body.password !== "string") {
+
+  if (!password || typeof password !== "string") {
     throw new Error("Invalid password.");
   }
-  if (!body.email_address || typeof body.email_address !== "string") {
+
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{6,16}$/;
+
+  if (!passwordRegex.test(password)) {
+    throw new Error(
+      "Password must be 6-16 characters, include upper and lowercase, number and symbol",
+    );
+  }
+
+  if (!finalEmail || typeof finalEmail !== "string") {
     throw new Error("Invalid email address.");
   }
 };
