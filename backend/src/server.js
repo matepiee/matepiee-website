@@ -25,10 +25,6 @@ app.use(
 
 app.use(logger);
 
-app.get("/api/health", (req, res) => {
-  res.json({ message: "Server started.", timestaml: new Date() });
-});
-
 app.use("/api/auth", authRoutes);
 
 app.use(errorHandler);
