@@ -64,18 +64,26 @@ export const logoutUser = async () => {
 };
 
 export const checkAuth = async () => {
-  const response = await fetch(`${API_URL}/me`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-  });
+  try {
+    const response = await fetch(`${API_URL}/me`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
 
-  if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      return null;
+    }
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (err) {
     return null;
   }
-
-  const data = await response.json();
-  return data;
 };

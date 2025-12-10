@@ -14,12 +14,14 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const data = await checkAuth();
-        if (data && data.user) {
-          setUser(data.user);
-        }
-      } catch (error) {
+        const user = await checkAuth();
+        setUser(user);
+      } catch (err) {
         setUser(null);
+
+        if (err.response && err.response.status !== 401) {
+          console.log("Auth check failed", err);
+        }
       } finally {
         setLoading(false);
       }

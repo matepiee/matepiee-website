@@ -7,6 +7,7 @@ import logger from "./middlewares/logger.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import pool from "./config/database.js";
 import authRoutes from "./routes/authRoutes.js";
+import twitchRoutes from "./routes/twitchRoutes.js";
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use(
 app.use(logger);
 
 app.use("/api/auth", authRoutes);
+app.use("/api/twitch", twitchRoutes);
 
 app.use(errorHandler);
 

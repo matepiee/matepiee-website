@@ -112,7 +112,7 @@ const Register = () => {
       <div className="max-w-md w-full space-y-8 bg-dark-purple-800/50 backdrop-blur-sm p-8 rounded-2xl border border-dark-purple-600 shadow-glow-purple">
         <div>
           <h2 className="mt-2 text-center text-3xl font-extrabold text-white tracking-wide">
-            Create a user!
+            Create a profile!
           </h2>
           <p className="mt-2 text-center text-sm text-gray-400">Join us</p>
         </div>
