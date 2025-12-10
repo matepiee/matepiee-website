@@ -1,8 +1,18 @@
-import React, { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import React from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import { useNotification } from "../../contexts/NotificationsContext";
 
 const Navbar = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user, logout } = useAuth();
+  const { showNotification } = useNotification();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    showNotification("Logged out successfully.", "info");
+    navigate("/login");
+  };
 
   return (
     <nav className="bg-dark-purple-900/80 backdrop-blur-md border-b border-dark-purple-700 sticky top-0 z-50 shadow-glow-purple">
@@ -16,6 +26,7 @@ const Navbar = () => {
               </span>
             </Link>
           </div>
+
           <div className="flex items-center gap-6">
             <NavLink
               to="/"
@@ -30,11 +41,13 @@ const Navbar = () => {
               Home
             </NavLink>
 
-            {isLoggedIn ? (
+            {user ? (
               <div className="flex items-center gap-4">
-                <span className="text-gray-300 text-sm">Hello, user!</span>
+                <span className="text-gray-300 text-sm hidden sm:block">
+                  Hello, {user.username}!
+                </span>
                 <button
-                  onClick={() => setIsLoggedIn(false)}
+                  onClick={handleLogout}
                   className="px-5 py-2 rounded-full border border-dark-purple-500 text-dark-purple-300 hover:bg-dark-purple-600 hover:text-white hover:shadow-glow-purple-hover transition-all duration-300 text-sm font-semibold"
                 >
                   Logout
@@ -45,7 +58,7 @@ const Navbar = () => {
                 <NavLink
                   to="/register"
                   className={({ isActive }) =>
-                    `relative px-1 py-1 transition-all duration-300 ${
+                    `relative px-1 py-1 transition-all duration-300 group ${
                       isActive ? "text-white" : "text-gray-400 hover:text-white"
                     }`
                   }
