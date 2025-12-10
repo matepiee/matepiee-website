@@ -28,4 +28,15 @@ export const validateRegister = (body) => {
   }
 };
 
-export const validateLogin = (body) => {};
+export const validateLogin = (body) => {
+  const { username, email, password } = body;
+
+  const identifier = username || email;
+
+  if (!identifier || typeof identifier !== "string") {
+    throw new Error("Username or Email is required.");
+  }
+  if (!password || typeof password !== "string") {
+    throw new Error("Password is required.");
+  }
+};
