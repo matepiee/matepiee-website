@@ -27,11 +27,12 @@ const Home = () => {
   const [loadingStatus, setLoadingStatus] = useState(true);
 
   const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [volume, setVolume] = useState(0.5);
   const playerRef = useRef(null);
+  const embedContainerRef = useRef(null); // Ref a div-hez
 
-  const STREAMER_NAME = "matepiee";
+  const STREAMER_NAME = "emiru";
 
   useEffect(() => {
     const checkStatus = async () => {
@@ -53,20 +54,23 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    if (isLive && !playerRef.current) {
-      const script = document.createElement("script");
-      script.src = "https://embed.twitch.tv/embed/v1.js";
-      script.async = true;
-      document.body.appendChild(script);
+    if (!isLive) return;
 
-      script.onload = () => {
-        const player = new window.Twitch.Player("twitch-embed", {
+    let player = null;
+
+    const initPlayer = () => {
+      // Ha már létezik a div és a Twitch object, inicializálunk
+      if (window.Twitch && window.Twitch.Player && embedContainerRef.current) {
+        // Töröljük a tartalmát, ha esetleg maradt volna valami
+        embedContainerRef.current.innerHTML = "";
+
+        player = new window.Twitch.Player("twitch-embed", {
           channel: STREAMER_NAME,
           width: "100%",
           height: "100%",
           layout: "video",
           autoplay: true,
-          muted: false,
+          muted: true, // Fontos: true-nak kell lennie az autoplay-hez
           controls: false,
           parent: ["localhost"],
         });
@@ -82,8 +86,37 @@ const Home = () => {
         player.addEventListener(window.Twitch.Player.READY, () => {
           player.setVolume(0.5);
         });
+      }
+    };
+
+    // Ellenőrizzük, hogy be van-e már töltve a script globálisan
+    if (!document.getElementById("twitch-embed-script")) {
+      const script = document.createElement("script");
+      script.id = "twitch-embed-script"; // ID, hogy ne töltsük be többször
+      script.src = "https://embed.twitch.tv/embed/v1.js";
+      script.async = true;
+      document.body.appendChild(script);
+
+      script.onload = () => {
+        // Kis késleltetés, hogy a DOM biztosan kész legyen (Visibility error ellen)
+        setTimeout(initPlayer, 100);
       };
+    } else {
+      // Ha a script már ott van, csak indítjuk a playert kis késleltetéssel
+      setTimeout(initPlayer, 100);
     }
+
+    // Cleanup function: ha elnavigálsz, törölje a playert
+    return () => {
+      if (playerRef.current) {
+        // A Twitch API nem ad destroy metódust a v1-ben könnyen,
+        // de a ref-et nullázzuk
+        playerRef.current = null;
+      }
+      if (embedContainerRef.current) {
+        embedContainerRef.current.innerHTML = "";
+      }
+    };
   }, [isLive]);
 
   const togglePlay = () => {
@@ -132,8 +165,13 @@ const Home = () => {
       </h1>
 
       {isLive ? (
-        <div className="relative group rounded-2xl overflow-hidden shadow-glow-purple border border-dark-purple-600 bg-black">
-          <div id="twitch-embed" className="aspect-video w-full"></div>
+        <div className="relative group rounded-2xl overflow-hidden shadow-glow-purple border border-dark-purple-600 bg-black aspect-video w-full">
+          {/* Itt a ref a div-hez, és fix méretek */}
+          <div
+            id="twitch-embed"
+            ref={embedContainerRef}
+            className="w-full h-full"
+          ></div>
 
           <div className="absolute inset-0 z-10" onClick={togglePlay}></div>
 
