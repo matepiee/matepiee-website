@@ -27,10 +27,10 @@ const Home = () => {
   const [loadingStatus, setLoadingStatus] = useState(true);
 
   const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.5);
   const playerRef = useRef(null);
-  const embedContainerRef = useRef(null); // Ref a div-hez
+  const embedContainerRef = useRef(null);
 
   const STREAMER_NAME = "emiru";
 
@@ -38,7 +38,7 @@ const Home = () => {
     const checkStatus = async () => {
       try {
         const res = await fetch(
-          `http://localhost:3000/api/twitch/status/${STREAMER_NAME}`,
+          `http://localhost:3000/api/twitch/status/${STREAMER_NAME}`
         );
         const data = await res.json();
         setIsLive(data.isLive);
@@ -59,9 +59,7 @@ const Home = () => {
     let player = null;
 
     const initPlayer = () => {
-      // Ha már létezik a div és a Twitch object, inicializálunk
       if (window.Twitch && window.Twitch.Player && embedContainerRef.current) {
-        // Töröljük a tartalmát, ha esetleg maradt volna valami
         embedContainerRef.current.innerHTML = "";
 
         player = new window.Twitch.Player("twitch-embed", {
@@ -70,47 +68,42 @@ const Home = () => {
           height: "100%",
           layout: "video",
           autoplay: true,
-          muted: true, // Fontos: true-nak kell lennie az autoplay-hez
+          muted: false,
           controls: false,
-          parent: ["localhost"],
+          parent: ["localhost", "127.0.0.1"],
         });
 
         playerRef.current = player;
 
         player.addEventListener(window.Twitch.Player.PLAY, () =>
-          setIsPlaying(true),
+          setIsPlaying(true)
         );
         player.addEventListener(window.Twitch.Player.PAUSE, () =>
-          setIsPlaying(false),
+          setIsPlaying(false)
         );
         player.addEventListener(window.Twitch.Player.READY, () => {
           player.setVolume(0.5);
+          player.setMuted(false);
         });
       }
     };
 
-    // Ellenőrizzük, hogy be van-e már töltve a script globálisan
     if (!document.getElementById("twitch-embed-script")) {
       const script = document.createElement("script");
-      script.id = "twitch-embed-script"; // ID, hogy ne töltsük be többször
+      script.id = "twitch-embed-script";
       script.src = "https://embed.twitch.tv/embed/v1.js";
       script.async = true;
       document.body.appendChild(script);
 
       script.onload = () => {
-        // Kis késleltetés, hogy a DOM biztosan kész legyen (Visibility error ellen)
-        setTimeout(initPlayer, 100);
+        setTimeout(initPlayer, 500);
       };
     } else {
-      // Ha a script már ott van, csak indítjuk a playert kis késleltetéssel
-      setTimeout(initPlayer, 100);
+      setTimeout(initPlayer, 500);
     }
 
-    // Cleanup function: ha elnavigálsz, törölje a playert
     return () => {
       if (playerRef.current) {
-        // A Twitch API nem ad destroy metódust a v1-ben könnyen,
-        // de a ref-et nullázzuk
         playerRef.current = null;
       }
       if (embedContainerRef.current) {
@@ -121,18 +114,17 @@ const Home = () => {
 
   const togglePlay = () => {
     if (playerRef.current) {
-      if (isPlaying) {
-        playerRef.current.pause();
-      } else {
+      if (playerRef.current.isPaused()) {
         playerRef.current.play();
+      } else {
+        playerRef.current.pause();
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
   const toggleMute = () => {
     if (playerRef.current) {
-      const newMuted = !isMuted;
+      const newMuted = !playerRef.current.getMuted();
       playerRef.current.setMuted(newMuted);
       setIsMuted(newMuted);
     }
@@ -166,14 +158,11 @@ const Home = () => {
 
       {isLive ? (
         <div className="relative group rounded-2xl overflow-hidden shadow-glow-purple border border-dark-purple-600 bg-black aspect-video w-full">
-          {/* Itt a ref a div-hez, és fix méretek */}
           <div
             id="twitch-embed"
             ref={embedContainerRef}
             className="w-full h-full"
           ></div>
-
-          <div className="absolute inset-0 z-10" onClick={togglePlay}></div>
 
           <div className="absolute bottom-0 left-0 right-0 bg-dark-purple-900/90 backdrop-blur-md p-4 flex items-center justify-between border-t border-dark-purple-500 transition-opacity duration-300 opacity-100 z-20">
             <div className="flex items-center gap-4">
@@ -230,7 +219,7 @@ const Home = () => {
             </svg>
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">
-            matepiee is currently Offline
+            {STREAMER_NAME} is currently Offline
           </h2>
           <p className="text-gray-400 max-w-md">
             I'll be back soon!{" "}
